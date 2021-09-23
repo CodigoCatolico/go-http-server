@@ -7,6 +7,7 @@
 
 ### Run
 	go run main.go
+
 or after a build
-	./main.go
 	
+	./main.go
