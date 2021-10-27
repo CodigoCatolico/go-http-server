@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -14,10 +16,12 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/path/", path)
-	mux.HandleFunc("/body", body)
-	mux.HandleFunc("/query", query)
-	mux.HandleFunc("/header", header)
+	logger := log.New(os.Stdout, "HTTP", log.Lmicroseconds)
+
+	mux.Handle("/path/", logMiddleware(logger, http.HandlerFunc(path)))
+	mux.Handle("/body", logMiddleware(logger, http.HandlerFunc(body)))
+	mux.Handle("/query", logMiddleware(logger, http.HandlerFunc(query)))
+	mux.Handle("/header", logMiddleware(logger, http.HandlerFunc(header)))
 
 	fmt.Println("server running at port:", port)
 	http.ListenAndServe(":"+port, mux)
