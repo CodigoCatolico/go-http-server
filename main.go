@@ -16,8 +16,18 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	logger := log.New(os.Stdout, "HTTP", log.Lmicroseconds)
+	// Usando um logger criado podemos passar flags para customizar o comportamento do logger.
+	// Como exemplo está sendo utilizando as flags de micro segundos, prefixo de mensagem e
+	// arquivo de origem.
+	logger := log.New(os.Stdout, "HTTP: ", log.Lmicroseconds|log.Lmsgprefix|log.Lshortfile)
 
+	// Adiconando o logMiddleware criamos um encapsulamento do handler, agora a func "path"
+	// está envolvida pelo middleware. O controle da requisicao é passado na seguinte ordem:
+	//
+	// - logMiddleware
+	// - handler
+	// - logMiddleware
+	//
 	mux.Handle("/path/", logMiddleware(logger, http.HandlerFunc(path)))
 	mux.Handle("/body", logMiddleware(logger, http.HandlerFunc(body)))
 	mux.Handle("/query", logMiddleware(logger, http.HandlerFunc(query)))

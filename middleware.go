@@ -12,13 +12,30 @@ import (
 func logMiddleware(logger *log.Logger, next http.Handler) http.Handler {
 	middleware := func(w http.ResponseWriter, r *http.Request) {
 
-		log.Println("message started")
+		// Executamos a lógica que precisamos antes do processamento da requisicao.
+		// Nesse caso logamos que a mensagem chegou, seu metodo e path.
+		logger.Printf("message started   : %s %s",
+			r.Method,
+			r.URL.Path,
+		)
+		// Capturamos o timestamp de inicio do processamento.
 		t := time.Now()
 
+		// Passamos a mensagem para o proximo handler.
 		next.ServeHTTP(w, r)
 
-		log.Println("message completed : latency ->", time.Since(t).String())
+		// Depois do tratamento do handler interno, temos acesso novamente a requisicao.
+		// Assim podemos logar o tempo decorrido desde que passamos a mensagem para o
+		// handler interno.
+		logger.Printf("message completed : %s %s : %s",
+			r.Method,
+			r.URL.Path,
+			time.Since(t).String(),
+		)
 	}
 
+	// Por fim retornamos nosso middleware usando a funcao HandleFunc que recebe uma
+	// simples funcao com a assinatura (http.ResponseWriter, *http.Request) e retorna
+	// um http.Handler.
 	return http.HandlerFunc(middleware)
 }
