@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -14,10 +16,22 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/path/", path)
-	mux.HandleFunc("/body", body)
-	mux.HandleFunc("/query", query)
-	mux.HandleFunc("/header", header)
+	// Usando um logger criado podemos passar flags para customizar o comportamento do logger.
+	// Como exemplo está sendo utilizando as flags de micro segundos, prefixo de mensagem e
+	// arquivo de origem.
+	logger := log.New(os.Stdout, "HTTP: ", log.Lmicroseconds|log.Lmsgprefix|log.Lshortfile)
+
+	// Adiconando o logMiddleware criamos um encapsulamento do handler, agora a func "path"
+	// está envolvida pelo middleware. O controle da requisicao é passado na seguinte ordem:
+	//
+	// - logMiddleware
+	// - handler
+	// - logMiddleware
+	//
+	mux.Handle("/path/", logMiddleware(logger, http.HandlerFunc(path)))
+	mux.Handle("/body", logMiddleware(logger, http.HandlerFunc(body)))
+	mux.Handle("/query", logMiddleware(logger, http.HandlerFunc(query)))
+	mux.Handle("/header", logMiddleware(logger, http.HandlerFunc(header)))
 
 	fmt.Println("server running at port:", port)
 	http.ListenAndServe(":"+port, mux)
